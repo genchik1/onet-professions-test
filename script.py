@@ -45,29 +45,19 @@ def main(my_data, *args):
         i = 0
         for (dataset, columns) in args:
             for col in columns:
-                if col != 'all':
-                    data = dataset[['Title', '_list_'+col]]
-                    data['_list_'+col] = data['_list_'+col].apply(tuple)
-                    data = data.drop_duplicates().dropna()
-                    data['_list_'+col] = data['_list_'+col].apply(list)
-                    for df in data.to_dict('record'):
-                        title = df['Title']
-                        x_col_list = df['_list_'+col]
-                        if len(set(my_name_list).symmetric_difference(set(x_col_list))) == 0:
-                            result.append({'my_name':my_name, 'title':title, 'lvl':col})
-                            i+=1
-                            break
-                    if i > 0:
+                data = dataset[['Title', '_list_'+col]]
+                data['_list_'+col] = data['_list_'+col].apply(tuple)
+                data = data.drop_duplicates().dropna()
+                data['_list_'+col] = data['_list_'+col].apply(list)
+                for df in data.to_dict('record'):
+                    title = df['Title']
+                    x_col_list = df['_list_'+col]
+                    if len(set(my_name_list).symmetric_difference(set(x_col_list))) == 0:
+                        result.append({'my_name':my_name, 'title':title, 'lvl':col})
+                        i+=1
                         break
-                else:
-                    data = dataset[['Title', '_list_'+col]]
-                    for df in data.to_dict('record'):
-                        title = df['Title']
-
-                        if len(set(my_name_list)-set(x_col_list)) == 0:
-                            result.append({'my_name':my_name, 'title':title, 'lvl':col})
-                            i+=1
-                            break
+                if i > 0:
+                    break
 
     return pd.DataFrame(result)
 
