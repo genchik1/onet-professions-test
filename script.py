@@ -116,6 +116,18 @@ def main(my_data, *args):
                                     result.append({'my_name':my_name, 'title':title, 'lvl':col})
                                     i+=1
                                     break
+                        if i == 0:
+                            for df in data.to_dict('record'):
+                                title = df['Title']
+                                x_col_list = df['_list_'+col]
+                                if isinstance(x_col_list, list):
+                                    if len(set(my_name_list)-set(x_col_list)) == 1 and len(my_name_list)>1:
+                                        result.append({'my_name':my_name, 'title':title, 'lvl':'poor accuracy'})
+                                        i+=1
+                                        break
+                        if i == 0:
+                            result.append({'my_name':my_name, 'title':'None', 'lvl':'None'})
+
 
     return pd.DataFrame(result)
 
@@ -130,7 +142,7 @@ if __name__ == '__main__':
 
     print ('len', len(result))
 
-    result.to_excel('for_version.xlsx', index=None)
+    result.to_excel('result.xlsx', index=None)
 
 
 
