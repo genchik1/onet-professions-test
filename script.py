@@ -10,12 +10,11 @@ def _prepare(x):
     x = x.str.lower()
     x = x.str.rstrip()
     x = x.astype(str)
-    x = x.str.replace(r'[\,|,/,",",(,),I,$,&,@,#,*,]', '')
+    x = x.str.replace(r'[\\,|,/,",",(,),$,&,@,#,*,]', '')
     x = x.str.replace(',', '')
     x = x.str.replace('.', '')
     x = x.str.replace(r'\s+', ' ')
     x = x.str.replace(r'\d+', '')
-    x = x.drop_duplicates()
     x = x.dropna()
     return x
 
@@ -23,6 +22,7 @@ def _prepare(x):
 def enrichment(data, name, args):
     replace_words, remove_list = args
     data[f'{name}_enrichment'] = _prepare(data[name]).astype(str)
+    data = data.drop_duplicates()
     for k, v in replace_words.items():
         data[f'{name}_enrichment'] = data[f'{name}_enrichment'].str.replace(k, v)
     data[f'{name}_list'] = data[f'{name}_enrichment'].apply(lambda x: str(x).split())
@@ -34,7 +34,6 @@ def enrichment(data, name, args):
 def main(job_zones, my_data, *args):
     job_zones = enrichment(job_zones, 'Title', args)
     my_data = enrichment(my_data, 'my_name', args)
-
     result = []
 
     for my_data_dict in my_data.to_dict('record'):
@@ -96,7 +95,7 @@ if __name__ == '__main__':
     
     result = main(job_zones, my_data, replace_words, remove_list)
 
-    print (result.head(20))
+    # print (result.head(20))
     print ('len', len(result))
 
     result.to_excel('first_version_130_validate.xlsx', index=None)
