@@ -10,9 +10,10 @@ def prepare(x):
     x = x.str.lower()
     x = x.str.rstrip()
     x = x.astype(str)
-    x = x.str.replace(r'[\\,|,/,",",(,),$,&,@,#,*,]', '')
+    x = x.str.replace(r'[\\,|,",",(,),$,&,@,#,*,]', '')
     x = x.str.replace(',', '')
     x = x.str.replace('.', '')
+    x = x.str.replace('/', ' ')
     x = x.str.replace(r'\s+', ' ')
     return x
 
