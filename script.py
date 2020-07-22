@@ -71,14 +71,14 @@ def add_concat_col(data, steps):
     return data
 
 
-def step(data, my_name_df, steps, result, i, key):
+def step(data, my_name_df, steps, result, i, accuracy):
     my_name = my_name_df['My_name']
     my_name_list = my_name_df['l_My_name']
     for df in data.to_dict('record'):
         title = df['title']
         for step, lvl in steps.items():
             if isinstance(df[step], list):
-                i = search(df[step], my_name_list, key)
+                i = search(df[step], my_name_list, accuracy)
                 if i > 0:
                     result.append({'my_name':my_name, 'title':title, 'lvl':lvl})
                     break
@@ -119,9 +119,11 @@ if __name__ == '__main__':
 
     result = main(my_data, alternatet_titles, ['Title', 'Short Title', 'Alternate Title'])
 
+    l_my_data = len(my_data)
+    l_result = len(result)
+
+    assert l_my_data == l_result, f"count of inputs and outputs must be equal ({l_my_data}:{l_result})!"
+    
     result.to_excel('result.xlsx', index=None)
 
-    print ('len', len(result))
     print(result.groupby(['lvl']).size())
-
-
