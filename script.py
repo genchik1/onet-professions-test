@@ -17,135 +17,111 @@ def prepare(x):
     return x
 
 
-def enrichment(x):
+def _singularize(x_str):
+    return set(singularize(str(x)) for x in str(x_str).split())
+
+
+def _enrichment(x):
     x = x.astype(str)
-    x = x.apply(lambda x: str(x).split())
-    x = x.apply(lambda x_list: list(singularize(str(x)) for x in x_list))
+    x = x.apply(_singularize)
     return x
 
 
-def main(my_data, *args):
+def enrichment(data, columns):
+    data['title'] = data['Title']
+
+    data_ = pd.DataFrame({}, columns=['title'])
+
+    for col in columns:
+        df = data[['title', col]].drop_duplicates().dropna()
+        df[col] = _enrichment(prepare(df[col]))
+        df = df.groupby(['title'])[col].apply(list).reset_index()
+        data_ = data_.merge(df, on='title', how='outer')
+
+    return data_
+
+
+def search(df, my_name_list, accuracy):
+    for df_set in df:
+        if accuracy == 0:
+            if len(my_name_list.symmetric_difference(df_set)) == 0:
+                return 1
+        elif accuracy == 1:
+            if len(my_name_list-df_set) == 0:
+                return 1
+        elif accuracy == 2:
+            if len(my_name_list-df_set) == 1 and len(my_name_list)>1:
+                return 1
+    return 0
+
+
+def _add_concat_col(data_dict):
+    result = []
+    for col in data_dict:
+        if isinstance(col, list):
+            for co in col:
+                if isinstance(co, set):
+                    for c in co:
+                        result.append(c)
+    return [set(np.unique(np.array(result)))]
+
+
+def add_concat_col(data, steps):
+    data['all'] = data[steps].apply(_add_concat_col, axis=1)
+    return data
+
+
+def step(data, my_name_df, steps, result, i, key):
+    my_name = my_name_df['My_name']
+    my_name_list = my_name_df['l_My_name']
+    for df in data.to_dict('record'):
+        title = df['title']
+        for step, lvl in steps.items():
+            if isinstance(df[step], list):
+                i = search(df[step], my_name_list, key)
+                if i > 0:
+                    result.append({'my_name':my_name, 'title':title, 'lvl':lvl})
+                    break
+        if i > 0:
+            break
+
+    return result, i
+
+
+def main(my_data, data, steps):
     my_data = pd.DataFrame(my_data)
-    my_data['_list_My_name'] = enrichment(prepare(my_data['My_name']))
+    my_data['l_My_name'] = _enrichment(prepare(my_data['My_name']))
 
-    my_columns = []
-
-    for (data, columns) in args:
-        for col in columns:
-            new_col_list = '_list_'+col
-            data[new_col_list] = enrichment(prepare(data[col]))
-        my_columns.extend(columns)
-
+    data = enrichment(data, steps)
+    data = add_concat_col(data, steps)
 
     result = []
 
-
-    dataset = pd.DataFrame({}, columns=['Title'])
-
-    for (data, columns) in args:
-        _all_data = pd.DataFrame({}, columns=['Title'])
-        for col in columns:
-            if col != 'Title':
-                new_col_list = '_list_'+col
-                df = data[['Title', new_col_list]]
-                df[new_col_list] = df[new_col_list].apply(tuple)
-                df = df.drop_duplicates().dropna()
-                df[new_col_list] = df[new_col_list].apply(list)
-                df = df.groupby(['Title'])[new_col_list].apply(list).reset_index()
-                df[new_col_list] = df[new_col_list].apply(lambda x_list: ' '.join([y for x in x_list for y in x]))
-                print (df.head())
-                _all_data = _all_data.merge(df, on='Title', how='outer')
-                del df
-
-        del data
-
-        _all_data['all'] = ''
-        for col in _all_data.columns:
-            if col != 'Title' and col != 'all':
-                _all_data['all'] = _all_data['all'] + ' ' + _all_data[col]
-
-        dataset = dataset.merge(_all_data, on='Title', how='outer')
-        del _all_data
-
-    dataset['all'] = ''
-    for col in [col for col in dataset.columns if col.startswith('all')]:
-        if col != 'all':
-            dataset['all'] = dataset['all'] + ' ' + dataset[col]
-            del dataset[col]
-
-    dataset['_list_all'] = dataset['all'].str.split()
-    del dataset['all']
-
-    print (dataset.head())
-
-    args = list(args)
-    
-    args.append((dataset[['Title', '_list_all']], ['all']))
-
-    print (args)
+    steps = {step:step for step in steps}
 
     for my_name_df in my_data.to_dict('record'):
-        my_name = my_name_df['My_name']
-        my_name_list = my_name_df['_list_My_name']
-
         i = 0
-        for (dataset, columns) in args:
-            for col in columns:
-                if col != 'all':
-                    data = dataset[['Title', '_list_'+col]]
-                    data['_list_'+col] = data['_list_'+col].apply(tuple)
-                    data = data.drop_duplicates().dropna()
-                    data['_list_'+col] = data['_list_'+col].apply(list)
-                    for df in data.to_dict('record'):
-                        title = df['Title']
-                        x_col_list = df['_list_'+col]
-                        if len(set(my_name_list).symmetric_difference(set(x_col_list))) == 0:
-                            result.append({'my_name':my_name, 'title':title, 'lvl':col})
-                            i+=1
-                            break
-                    if i > 0:
-                        break
-                else:
-                    if i == 0:
-                        data = dataset[['Title', '_list_'+col]]
-                        for df in data.to_dict('record'):
-                            title = df['Title']
-                            x_col_list = df['_list_'+col]
-                            if isinstance(x_col_list, list):
-                                if len(set(my_name_list)-set(x_col_list)) == 0:
-                                    result.append({'my_name':my_name, 'title':title, 'lvl':col})
-                                    i+=1
-                                    break
-                        if i == 0:
-                            for df in data.to_dict('record'):
-                                title = df['Title']
-                                x_col_list = df['_list_'+col]
-                                if isinstance(x_col_list, list):
-                                    if len(set(my_name_list)-set(x_col_list)) == 1 and len(my_name_list)>1:
-                                        result.append({'my_name':my_name, 'title':title, 'lvl':'poor accuracy'})
-                                        i+=1
-                                        break
-                        if i == 0:
-                            result.append({'my_name':my_name, 'title':'None', 'lvl':'None'})
 
+        for accuracy, steps_ in enumerate([steps, {'all': 'all'}, {'all': 'pool accuracy'}]):
+            if i == 0:
+                result, i = step(data, my_name_df, steps_, result, i, accuracy)
 
+        if i == 0:
+            result.append({'my_name':my_name_df['My_name'], 'title':'None', 'lvl':'None'})
+                        
     return pd.DataFrame(result)
 
 
 if __name__ == '__main__':
     # Open datas:
     alternatet_titles = pd.read_excel('Alternate Titles.xlsx')[['Title', 'Alternate Title', 'Short Title']]
-    skills = pd.read_excel('Skills.xlsx')[['Element Name', 'Title']]
     my_data = pd.read_csv('my.txt', sep=';', header=None, index_col=None, names=["My_name"], engine='python', squeeze=True)
 
-    result = main(my_data, (alternatet_titles, ['Title', 'Short Title', 'Alternate Title']), (skills, ['Element Name']))
-
-    print ('len', len(result))
+    result = main(my_data, alternatet_titles, ['Title', 'Short Title', 'Alternate Title'])
 
     result.to_excel('result.xlsx', index=None)
 
-
-
-
+    print ('len', len(result))
+    print(result.groupby(['lvl']).size())
 
 

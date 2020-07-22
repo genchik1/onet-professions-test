@@ -1,12 +1,12 @@
 ### Onet-professions
 
 #### финальный файл в result.xlsx, на данный момент 
-- 23 - Title
-- 24 - Short title
-- 181 - Alternate title
-- 142 - all (вхождение всех слов из my_name в комбинацию вышеупомянутых столбцов + Element Name)
-- 102 - poor accuracy (вхождение слов N-1 из my_name в комбинацию вышеупомянутых столбцов + Element Name)
-- 37 - None (неопределено)
+- 16 - Title
+- 22 - Short title
+- 186 - Alternate title
+- 135 - all (вхождение всех слов из my_name в комбинацию вышеупомянутых столбцов + Element Name)
+- 123 - poor accuracy (вхождение слов N-1 из my_name в комбинацию вышеупомянутых столбцов + Element Name)
+- 21 - None (неопределено)
 
 #### Очистка
 
