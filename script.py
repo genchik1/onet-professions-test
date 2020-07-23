@@ -45,15 +45,12 @@ def rm_number(x_list):
 
 
 
-def _enrichment(x, words, singular=True):
+def _enrichment(x, words):
     x = x.astype(str)
     x = x.apply(lambda x: str(x).split())
     x = x.apply(rm_number)
     x = x.apply(lambda x: replace_w(x, words))
-    if singular:
-        x = x.apply(_singularize)
-    else:
-        x = x.apply(set)
+    x = x.apply(_singularize)
     return x
 
 
