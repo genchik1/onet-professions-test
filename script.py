@@ -11,34 +11,47 @@ def prepare(x):
     x = x.str.lower()
     x = x.str.rstrip()
     x = x.astype(str)
-    x = x.str.replace(r'[\\,|,",",(,),$,&,@,#,*,]', '')
+    x = x.str.replace(r'[\\,|,",",(,),$,@,#,*,]', '')
     x = x.str.replace(',', '')
     x = x.str.replace('.', '')
     x = x.str.replace('/', ' ')
     x = x.str.replace(r'\s+', ' ')
-    x = x.str.replace(r'\d+', ' ')
+    # x = x.str.replace(r'\d+', ' ')
     return x
 
 
-def _singularize(x_str):
-    return set(singularize(str(x)) for x in str(x_str).split())
+def _singularize(x_list):
+    return set(singularize(str(x)) for x in x_list)
 
 
-def _enrichment(x):
+def replace_w(x, replace_words):
+    for rw, rw_new in replace_words.items():
+        if rw in x:
+            x.remove(rw)
+            x.append(rw_new)
+    return x
+
+
+def _enrichment(x, words, singular=True):
     x = x.astype(str)
-    x = x.apply(_singularize)
+    x = x.apply(lambda x: str(x).split())
+    x = x.apply(lambda x: replace_w(x, words))
+    if singular:
+        x = x.apply(_singularize)
+    else:
+        x = x.apply(set)
     return x
 
 
-def enrichment(data, columns):
+def enrichment(data, columns, replace_words):
     data['title'] = data['Title']
 
     data_ = pd.DataFrame({}, columns=['title'])
 
     for col in columns:
         df = data[['title', col]].drop_duplicates().dropna()
-        df[col] = _enrichment(prepare(df[col]))
-        df = df.groupby(['title'])[col].apply(list).reset_index()
+        df['l_'+col] = _enrichment(prepare(df[col]),replace_words)
+        df = df.groupby(['title'])['l_'+col].apply(list).reset_index()
         data_ = data_.merge(df, on='title', how='outer')
 
     return data_
@@ -60,63 +73,67 @@ def add_concat_col(data, steps):
     return data
 
 
-def rm_words(x, del_words):
-    for dw in del_words:
-        if dw in x:
-            x.remove(dw)
-    return x
-
-
-def search(df, my_name_list, accuracy, del_words):
+def search(df, my_name_list, accuracy):
     for df_set in df:
         if accuracy == 0:
             if len(my_name_list.symmetric_difference(df_set)) == 0:
                 return 1
-        elif accuracy == 1:
+        elif accuracy == 1 or accuracy==2:
             if len(my_name_list-df_set) == 0:
                 return 1
-        elif accuracy == 2:
-            my_name_list = rm_words(my_name_list, del_words)
+        elif accuracy == 3:
             if len(my_name_list-df_set) < 3 and len(my_name_list)>1:
                 return 1
     return 0
 
 
-def step(data, my_name_df, steps, result, i, accuracy, del_words):
+def funstep(data, my_name_df, steps, result, i, accuracy):
     my_name = my_name_df['My_name']
     my_name_list = my_name_df['l_My_name']
     for df in data.to_dict('record'):
-        title = df['title']
         for step, lvl in steps.items():
             if isinstance(df[step], list):
                 # pdb.set_trace()
-                i = search(df[step], my_name_list, accuracy, del_words)
+                i = search(df[step], my_name_list, accuracy)
                 if i > 0:
-                    result.append({'my_name':my_name, 'title':title, 'lvl':lvl})
+                    result.append({
+                        'lvl':lvl,
+                        'my_name':my_name,
+                        'accuracy':accuracy,
+                        **df,
+                        'my_name_list':my_name_list,
+                    })
                     break
         if i > 0:
-            break
+            break        
 
     return result, i
 
 
-def main(my_data, files, steps, del_words):
+def main(my_data, files, steps, replace_words):
     data = pd.DataFrame({}, columns=['title'])
 
     for i, (name, columns) in enumerate(files.items()):
         _data = pd.read_excel(name)[['Title', *columns]]
         print (_data.head())
         if i==0:
-            _data = enrichment(_data, ['Title', *columns])
+            _data = enrichment(_data, ['Title', *columns], replace_words)
         else:
-            _data = enrichment(_data, columns)
+            _data = enrichment(_data, columns, replace_words)
         data = data.merge(_data, on='title', how='outer')
-        del data
+        del _data
+
+    steps = ['l_'+step for step in steps]
+
+    print (data.head())
+    data = add_concat_col(data, steps)
+
+    print (data.head())
+
+    print (steps)
 
     my_data = pd.DataFrame(my_data)
-    my_data['l_My_name'] = _enrichment(prepare(my_data['My_name']))
-
-    data = add_concat_col(data, steps)
+    my_data['l_My_name'] = _enrichment(prepare(my_data['My_name']), replace_words)
 
     result = []
 
@@ -125,16 +142,16 @@ def main(my_data, files, steps, del_words):
     for my_name_df in my_data.to_dict('record'):
         i = 0
 
-        for accuracy, steps_ in enumerate([steps, {'all': 'all'}, {'all': 'pool accuracy'}]):
+        for accuracy, mysteps in enumerate([steps, steps, {'all': 'all'}, {'all': 'pool accuracy'}]):
             if i == 0:
-                result, i = step(data, my_name_df, steps_, result, i, accuracy, del_words)
+                result, i = funstep(data, my_name_df, mysteps, result, i, accuracy)
                 if i > 0:
                     break
 
         if i == 0:
             result.append({'my_name':my_name_df['My_name'], 'title':'None', 'lvl':'None'})
                         
-    return pd.DataFrame(result)
+    return pd.DataFrame(result)[['lvl', 'my_name', 'l_Title', 'accuracy', 'l_Short Title', 'l_Alternate Title', 'my_name_list']]
 
 
 if __name__ == '__main__':
@@ -144,19 +161,19 @@ if __name__ == '__main__':
         'Alternate Titles.xlsx': ['Short Title', 'Alternate Title'],
     }
 
-    del_words = ['sr', 'it', 'av', 'vp', 'iius']
+    replace_words = {
+        'sr':'senior'
+    }
 
     my_data = pd.read_csv('my.txt', sep=';', header=None, index_col=None, names=["My_name"], engine='python', squeeze=True)
 
-    result = main(my_data, files, ['Title', *[c for cols in files.values() for c in cols]], del_words)
-
-
+    result = main(my_data, files, ['Title', *[c for cols in files.values() for c in cols]], replace_words)
 
     l_my_data = len(my_data)
     l_result = len(result)
 
     assert l_my_data == l_result, f"count of inputs and outputs must be equal ({l_my_data}:{l_result})!"
     
-    print(result.groupby(['lvl']).size())
+    print(result.groupby(['lvl', 'accuracy']).size())
     result.to_excel('result.xlsx', index=None)
-
+    
