@@ -121,7 +121,7 @@ def funstep(data, my_name_df, steps, result, i, accuracy):
     return result, i
 
 
-def main(my_data, files, steps, replace_words):
+def main(my_data, files, steps, replace_words, output_columns):
     data = pd.DataFrame({}, columns=['title'])
 
     for i, (name, columns) in enumerate(files.items()):
@@ -154,7 +154,7 @@ def main(my_data, files, steps, replace_words):
         if i == 0:
             result.append({'my_name':my_name_df['My_name'], 'title':'None', 'lvl':'None'})
                         
-    return pd.DataFrame(result)[['my_name', 'title', 'accuracy', 'lvl', 'Short Title', 'Alternate Title', 'my_name_list']]
+    return pd.DataFrame(result)[output_columns]
 
 
 if __name__ == '__main__':
@@ -175,7 +175,10 @@ if __name__ == '__main__':
 
     my_data = pd.read_csv('my.txt', sep=';', header=None, index_col=None, names=["My_name"], engine='python', squeeze=True)
 
-    result = main(my_data, files, ['Title', *[c for cols in files.values() for c in cols]], replace_words)
+
+    output_columns = ['my_name', 'title', 'accuracy', 'lvl', 'Short Title', 'Alternate Title', 'my_name_list']
+
+    result = main(my_data, files, ['Title', *[c for cols in files.values() for c in cols]], replace_words, output_columns)
 
     l_my_data = len(my_data)
     l_result = len(result)
