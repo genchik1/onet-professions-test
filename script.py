@@ -16,7 +16,6 @@ def prepare(x):
     x = x.str.replace('.', '')
     x = x.str.replace('/', ' ')
     x = x.str.replace(r'\s+', ' ')
-    # x = x.str.replace(r'\d+', ' ')
     return x
 
 
@@ -28,13 +27,28 @@ def replace_w(x, replace_words):
     for rw, rw_new in replace_words.items():
         if rw in x:
             x.remove(rw)
-            x.append(rw_new)
+            if rw_new != '':
+                x.append(rw_new)
     return x
+
+def rm_number(x_list):
+    new = []
+    if isinstance(x_list, list):
+        for x in x_list:
+            try:
+                x = int(x)
+                if not isinstance(x, int):
+                    new.append(x)
+            except ValueError:
+                new.append(x)
+    return new
+
 
 
 def _enrichment(x, words, singular=True):
     x = x.astype(str)
     x = x.apply(lambda x: str(x).split())
+    x = x.apply(rm_number)
     x = x.apply(lambda x: replace_w(x, words))
     if singular:
         x = x.apply(_singularize)
@@ -50,8 +64,8 @@ def enrichment(data, columns, replace_words):
 
     for col in columns:
         df = data[['title', col]].drop_duplicates().dropna()
-        df['l_'+col] = _enrichment(prepare(df[col]),replace_words)
-        df = df.groupby(['title'])['l_'+col].apply(list).reset_index()
+        df[col] = _enrichment(prepare(df[col]),replace_words)
+        df = df.groupby(['title'])[col].apply(list).reset_index()
         data_ = data_.merge(df, on='title', how='outer')
 
     return data_
@@ -115,7 +129,6 @@ def main(my_data, files, steps, replace_words):
 
     for i, (name, columns) in enumerate(files.items()):
         _data = pd.read_excel(name)[['Title', *columns]]
-        print (_data.head())
         if i==0:
             _data = enrichment(_data, ['Title', *columns], replace_words)
         else:
@@ -123,14 +136,7 @@ def main(my_data, files, steps, replace_words):
         data = data.merge(_data, on='title', how='outer')
         del _data
 
-    steps = ['l_'+step for step in steps]
-
-    print (data.head())
     data = add_concat_col(data, steps)
-
-    print (data.head())
-
-    print (steps)
 
     my_data = pd.DataFrame(my_data)
     my_data['l_My_name'] = _enrichment(prepare(my_data['My_name']), replace_words)
@@ -151,7 +157,7 @@ def main(my_data, files, steps, replace_words):
         if i == 0:
             result.append({'my_name':my_name_df['My_name'], 'title':'None', 'lvl':'None'})
                         
-    return pd.DataFrame(result)[['lvl', 'my_name', 'l_Title', 'accuracy', 'l_Short Title', 'l_Alternate Title', 'my_name_list']]
+    return pd.DataFrame(result)[['my_name', 'title', 'accuracy', 'lvl', 'Short Title', 'Alternate Title', 'my_name_list']]
 
 
 if __name__ == '__main__':
@@ -162,7 +168,12 @@ if __name__ == '__main__':
     }
 
     replace_words = {
-        'sr':'senior'
+        'sr':'senior',
+        'i': '',
+        'ii': '',
+        'iii': '',
+        'iiii': '',
+        'ownwer':'owner'
     }
 
     my_data = pd.read_csv('my.txt', sep=';', header=None, index_col=None, names=["My_name"], engine='python', squeeze=True)
@@ -175,5 +186,7 @@ if __name__ == '__main__':
     assert l_my_data == l_result, f"count of inputs and outputs must be equal ({l_my_data}:{l_result})!"
     
     print(result.groupby(['lvl', 'accuracy']).size())
+
     result.to_excel('result.xlsx', index=None)
+    
     
