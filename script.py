@@ -144,8 +144,8 @@ def main(my_data, files, steps, replace_words, output_columns):
 
     for my_name_df in my_data.to_dict('record'):
         i = 0
-
-        for accuracy, mysteps in enumerate([steps, steps, {'all': 'all'}, {'all': 'pool accuracy'}]):
+# , steps, {'all': 'all'}, {'all': 'pool accuracy'}
+        for accuracy, mysteps in enumerate([steps]):
             if i == 0:
                 result, i = funstep(data, my_name_df, mysteps, result, i, accuracy)
                 if i > 0:
@@ -170,7 +170,7 @@ if __name__ == '__main__':
         'ii': '',
         'iii': '',
         'iiii': '',
-        'ownwer':'owner'
+        'ownwer':'owner',
     }
 
     my_data = pd.read_csv('my.txt', sep=';', header=None, index_col=None, names=["My_name"], engine='python', squeeze=True)
@@ -190,3 +190,4 @@ if __name__ == '__main__':
     result.to_excel('result.xlsx', index=None)
     
     
+
