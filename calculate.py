@@ -10,7 +10,7 @@ from nltk.stem import PorterStemmer, WordNetLemmatizer
 from nltk.corpus import wordnet
 
 
-def _match(end_data, i, my_prof_dict, my_profession_set, onet_prof, steps, nltk, nltk2):
+def _match(code_title, end_data, i, my_prof_dict, my_profession_set, onet_prof, steps, nltk, nltk2):
     if nltk:
         stop_words = set(stopwords.words("english"))
         lemmatizer = WordNetLemmatizer()
@@ -44,14 +44,14 @@ def _match(end_data, i, my_prof_dict, my_profession_set, onet_prof, steps, nltk,
         if len(result_codes)>0 and i == 0:
             result_codes = list(np.unique(np.array(result_codes)))
             if len(result_codes)==1:
-                end_data.append({**my_prof_dict, 'title':'undefined', 'lvl':step, 'codes':result_codes[0], 'nltk':nltk})
+                end_data.append({**my_prof_dict, 'title':code_title[result_codes[0]], 'lvl':step, 'codes':result_codes, 'nltk':nltk})
                 i+=1
-            if nltk2:
-                if len(result_codes)>1 and nltk:
-                    end_data.append({**my_prof_dict, 'title':'undefined', 'lvl':step, 'codes':result_codes, 'nltk':nltk})
-                    break
-            else:
-                if len(result_codes)>1:
+            elif len(result_codes)>1:
+                if nltk2:
+                    if nltk:
+                        end_data.append({**my_prof_dict, 'title':'undefined', 'lvl':step, 'codes':result_codes, 'nltk':nltk})
+                        break
+                else:
                     end_data.append({**my_prof_dict, 'title':'undefined', 'lvl':step, 'codes':result_codes, 'nltk':nltk})
                     break
 
@@ -64,13 +64,24 @@ def _match(end_data, i, my_prof_dict, my_profession_set, onet_prof, steps, nltk,
 
 def match(my_prof, onet_prof, steps=s.STEPS, nltk=True):
     end_data = []
+
+    from collections import defaultdict
+
+    code_title = onet_prof[['code', 'title']].drop_duplicates().dropna()
+    # code_title = code_title.set_index('code')
+    code_title = pd.Series(code_title['title'].tolist(), index=code_title['code'])
+    print (code_title)
+    code_title = code_title.to_dict()
+
+    print (code_title['11-1011.00'])
+
     for my_prof_dict in my_prof.to_dict('record'):
         my_profession_set = my_prof_dict['my_professions_set']
 
-        i, end_data = _match(end_data, 0, my_prof_dict, my_profession_set, onet_prof, steps, False, nltk)
+        i, end_data = _match(code_title, end_data, 0, my_prof_dict, my_profession_set, onet_prof, steps, False, nltk)
 
         if i == 0 and nltk:
-            i, end_data = _match(end_data, i, my_prof_dict, my_profession_set, onet_prof, steps, True, nltk)
+            i, end_data = _match(code_title, end_data, i, my_prof_dict, my_profession_set, onet_prof, steps, True, nltk)
             
     return pd.DataFrame(end_data)
 

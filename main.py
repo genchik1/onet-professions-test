@@ -1,7 +1,15 @@
+import re
 import pandas as pd
 import settings as s
 import calculate as c
 import data_preparation as dp
+
+
+def re_list(x):
+    if len(x)>0:
+        return x[0]
+    else:
+        return ''
 
 
 # Open datasets:
@@ -15,6 +23,8 @@ my_prof['my_professions_set'] = dp.enrichment(my_prof['my_professions'])
 
 for (data, parameters) in onet_prof:
     for col in parameters['to_find_matches']:
+        # if col == 'Alternate Title':
+        data[col] = data[col].apply(lambda x: re.sub(r'\((.*?)\)', '', str(x)))
         data[col] = dp.prepare(data[col])
 
 

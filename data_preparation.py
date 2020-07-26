@@ -37,6 +37,7 @@ def prepare(x):
     x = x.str.replace('.', '')
     x = x.str.replace('/', ' ')
     x = x.str.replace(r'\s+', ' ')
+    x = x.str.replace(' & ', '&')
     return x
 
 
