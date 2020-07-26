@@ -75,7 +75,7 @@ def enrichment(x, words=s.REPLACE_WORDS):
     return x
 
 
-def enrichments(data, fs, replace_words=s.REPLACE_WORDS):
+def enrichments(data, fs, nlt=True, replace_words=s.REPLACE_WORDS):
     data['title'] = data['Title']
     dataset = pd.DataFrame(data[['title', 'code']].drop_duplicates().dropna())
     for col in fs['to_find_matches']:
@@ -86,6 +86,8 @@ def enrichments(data, fs, replace_words=s.REPLACE_WORDS):
         del df
     del data
     return dataset
+
+
 
 
 

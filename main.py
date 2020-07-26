@@ -12,8 +12,6 @@ my_prof = dp.open_my_file(s.MY_PROFESSIONS_FILE)
 # Data preparations:
 my_prof['my_professions'] = dp.prepare(my_prof['my_professions'])
 my_prof['my_professions_set'] = dp.enrichment(my_prof['my_professions'])
-print (my_prof.head())
-
 
 for (data, parameters) in onet_prof:
     for col in parameters['to_find_matches']:
@@ -28,17 +26,14 @@ for (data, parameters) in onet_prof:
     del data
 del onet_prof
 
-print (onet_prof_all.head())
-
 
 # Calculate:
-data = c.match(my_prof, onet_prof_all)
+data = c.match(my_prof, onet_prof_all, steps=s.STEPS, nltk=s.USE_NLTK)
 
 data['accuracy'] = c.accuracy(data['codes'])
 
-print (data.head())
 
-
+# find a family of professions
 if s.ADD_SOC_FAMILY:
     fd = dp.open_my_file(s.FAMILY)
     data['fcode'] = c.fcode(data['codes'])
@@ -46,9 +41,7 @@ if s.ADD_SOC_FAMILY:
     data['family'] = data['family'].fillna('undefined')
 
 
-
-# data.to_csv(s.OUTPUT_FILE['path'], **s.OUTPUT_FILE['parameters'])
-
+# Save settings:
 ld = len(data)
 
 with pd.ExcelWriter(s.OUTPUT_FILE['path'], engine='xlsxwriter') as writer:
@@ -59,17 +52,11 @@ with pd.ExcelWriter(s.OUTPUT_FILE['path'], engine='xlsxwriter') as writer:
     worksheet.set_column('C:C', 15)
     worksheet.set_column('D:D', 10)
     worksheet.set_column('E:E', 30)
+    worksheet.set_column('F:F', 40)
     worksheet.conditional_format(f'D{0}:D{ld+1}', {'type': 'data_bar'})
 
 
 print (data.groupby(['lvl']).size())
-
-
-
-
-
-
-
 
 
 

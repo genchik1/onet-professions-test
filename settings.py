@@ -29,16 +29,7 @@ MATCH_FILES = [
 
 STEPS = ['Title', 'Short Title', 'Alternate Title']
 
-
-OUTPUT_FILE = {
-    'path': os.path.join(OUTPUT_DATA_PATHS,'test.xlsx'),
-    'parameters': {
-        # 'sep': '\t',
-        'index': None,
-        'columns': ['my_professions', 'title', 'lvl', 'accuracy', 'family', 'codes']
-    }
-}
-
+USE_NLTK = True
 
 REPLACE_WORDS = {
     'sr':'senior',
@@ -62,6 +53,16 @@ FAMILY = {
     }
 }
 
+
+
+OUTPUT_FILE = {
+    'path': os.path.join(OUTPUT_DATA_PATHS,'test_nlt.xlsx'),
+    'parameters': {
+        # 'sep': '\t',
+        'index': None,
+        'columns': ['my_professions', 'title', 'lvl', 'accuracy', 'family', 'codes', 'nltk']
+    }
+}
 
 
 if not os.path.isdir(OUTPUT_DATA_PATHS):
