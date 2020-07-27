@@ -59,14 +59,14 @@ def _match(code_title, end_data, my_prof_dict, onet_prof, nltk, type_, i):
             names_list = onet_prof_dict[step]
 
             for names in names_list:
+
                 if type_ == 'symmetric_difference':
                     if len(my_profession_set.symmetric_difference(names)) == 0:
                         if step == 'Title' or  step == 'Title nltk':
                             end_data.append({**my_prof_dict, 'title':onet_prof_dict['title'], 'lvl':step, 'codes':[code], 'nltk':nltk, 'coefficient':coefficient, 'dl':False})
                             i += 1
                             break
-                        result_codes.append(code)
-                        result_titles.append(onet_prof_dict['title'])
+
                 elif type_ == 'symmetric_diff':
                     if len(my_profession_set-names) == 1 and len(names-my_profession_set) == 1:
                         sd = list(my_profession_set.symmetric_difference(names))
@@ -77,16 +77,15 @@ def _match(code_title, end_data, my_prof_dict, onet_prof, nltk, type_, i):
                                 end_data.append({**my_prof_dict, 'title':onet_prof_dict['title'], 'lvl':step, 'codes':[code], 'nltk':nltk, 'coefficient':coefficient, 'dl':True})
                                 i += 1
                                 break
-                            result_codes.append(code)
-                            result_titles.append(onet_prof_dict['title'])
+
                 elif type_ == 'difference':
                     if len(my_profession_set-names) == 0:
                         if step == 'Title' or  step == 'Title nltk':
                             end_data.append({**my_prof_dict, 'title':onet_prof_dict['title'], 'lvl':step, 'codes':[code], 'nltk':nltk, 'coefficient':coefficient, 'dl':False})
                             i += 1
                             break
-                        result_codes.append(code)
-                        result_titles.append(onet_prof_dict['title'])
+                result_codes.append(code)
+                result_titles.append(onet_prof_dict['title'])
 
             if i > 0:
                 break
