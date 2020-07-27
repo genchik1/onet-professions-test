@@ -31,7 +31,7 @@ MATCH_FILES = [
 STEPS = ['Title', 'Short Title', 'Alternate Title']
 
 
-COMPARISON_OF_WORDS = ['symmetric_difference_zero', 'difference']   # 'symmetric_diff'
+COMPARISON_OF_WORDS = ['symmetric_difference', 'difference']   # 'symmetric_diff'
 
 
 USE_NLTK = True
@@ -66,11 +66,11 @@ FAMILY = {
 
 
 OUTPUT_FILE = {
-    'path': os.path.join(OUTPUT_DATA_PATHS,'test_nlt.xlsx'),
+    'path': os.path.join(OUTPUT_DATA_PATHS,'result.xlsx'),
     'parameters': {
         # 'sep': '\t',
         'index': None,
-        'columns': ['my_professions', 'title', 'lvl', 'accuracy', 'family', 'codes', 'nltk', 'coefficient', 'dl']
+        'columns': ['my_professions', 'title', 'lvl', 'accuracy', 'coefficient', 'family', 'codes', 'nltk']
     }
 }
 
