@@ -27,14 +27,19 @@ MATCH_FILES = [
     },
 ]
 
+
 STEPS = ['Title', 'Short Title', 'Alternate Title']
 
-COMPARISON_OF_WORDS = ['symmetric_difference', 'difference']
+
+COMPARISON_OF_WORDS = ['symmetric_difference_zero', 'difference']   # 'symmetric_diff'
+
 
 USE_NLTK = True
 
+
 if USE_NLTK:
     STEPS = ['Title', 'Alternate Title', 'Short Title', 'Title nltk', 'Alternate Title nltk', 'Short Title nltk']
+
 
 REPLACE_WORDS = {
     'sr':'senior',
@@ -48,6 +53,7 @@ REPLACE_WORDS = {
 
 ADD_SOC_FAMILY = True
 
+
 FAMILY = {
     'path': os.path.join(INPUT_DATA_PATHS, 'family.csv'),
     'read_parameters': {
@@ -59,13 +65,12 @@ FAMILY = {
 }
 
 
-
 OUTPUT_FILE = {
     'path': os.path.join(OUTPUT_DATA_PATHS,'test_nlt.xlsx'),
     'parameters': {
         # 'sep': '\t',
         'index': None,
-        'columns': ['my_professions', 'title', 'lvl', 'accuracy', 'family', 'codes', 'nltk', 'coefficient']
+        'columns': ['my_professions', 'title', 'lvl', 'accuracy', 'family', 'codes', 'nltk', 'coefficient', 'dl']
     }
 }
 

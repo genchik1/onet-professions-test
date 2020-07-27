@@ -11,6 +11,7 @@ from nltk.stem import PorterStemmer, WordNetLemmatizer
 from nltk.corpus import wordnet
 
 stop_words = set(stopwords.words("english"))
+stop_words.remove('it')
 lemmatizer = WordNetLemmatizer()
 
 
