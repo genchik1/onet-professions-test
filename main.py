@@ -27,7 +27,6 @@ if s.USE_NLTK:
 
 for (data, parameters) in onet_prof:
     for col in parameters['to_find_matches']:
-        # if col == 'Alternate Title':
         data[col] = data[col].apply(lambda x: re.sub(r'\((.*?)\)', '', str(x)))
         data[col] = dp.prepare(data[col])
 
