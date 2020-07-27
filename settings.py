@@ -29,6 +29,8 @@ MATCH_FILES = [
 
 STEPS = ['Title', 'Short Title', 'Alternate Title']
 
+COMPARISON_OF_WORDS = ['symmetric_difference', 'difference']
+
 USE_NLTK = True
 
 if USE_NLTK:

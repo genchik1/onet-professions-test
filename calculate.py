@@ -82,7 +82,7 @@ def match(my_prof, onet_prof, steps=s.STEPS):
     for my_prof_dict in my_prof.to_dict('record'):
         # pdb.set_trace()
         i = 0
-        for type_ in ['symmetric_difference', 'difference']:
+        for type_ in s.COMPARISON_OF_WORDS:
             if i==0:
                 i, end_data = _match(code_title, end_data, my_prof_dict, onet_prof, False, type_, i)
                 if i==0 and nltk:
