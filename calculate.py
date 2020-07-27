@@ -4,39 +4,51 @@ import pdb
 import numpy as np
 import pandas as pd
 import settings as s
-import pdb
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer, WordNetLemmatizer
 from nltk.corpus import wordnet
 
 
-def _match(code_title, end_data, i, my_prof_dict, my_profession_set, onet_prof, steps, nltk, nltk2):
+def lemmatize_and_drop_stop_words(stop_words, lemmatizer, dataset):
+    dataset = [word for word in dataset if not word in stop_words]
+    dataset = set(lemmatizer.lemmatize(x, pos=wordnet.VERB) for x in dataset)
+    return dataset
+
+
+def _match(code_title, end_data, i, my_prof_dict, my_profession_set, onet_prof, steps, nltk, nltk2, type_='symmetric_difference'):
     if nltk:
         stop_words = set(stopwords.words("english"))
         lemmatizer = WordNetLemmatizer()
-        my_profession_set = [word for word in my_profession_set if not word in stop_words]
-        my_profession_set = set(lemmatizer.lemmatize(x, pos=wordnet.VERB) for x in my_profession_set)
+        my_profession_set = lemmatize_and_drop_stop_words(stop_words, lemmatizer, my_profession_set)
  
     for step in steps:
         result_codes = []
         result_titles = []
-
+    
         for onet_prof_dict in onet_prof.to_dict('record'):
             code = onet_prof_dict['code']
             names_list = onet_prof_dict[step]
 
             for names in names_list:
                 if nltk:
-                    names = [word for word in names if not word in stop_words]
-                    names = set(lemmatizer.lemmatize(x, pos=wordnet.VERB) for x in names)
+                    names = lemmatize_and_drop_stop_words(stop_words, lemmatizer, names)
 
-                if len(my_profession_set.symmetric_difference(names)) == 0:
-                    if step == 'Title':
-                        end_data.append({**my_prof_dict, 'title':onet_prof_dict['title'], 'lvl':step, 'codes':[code], 'nltk':nltk})
-                        i += 1
-                        break
-                    result_codes.append(code)
-                    result_titles.append(onet_prof_dict['title'])
+                if type_=='symmetric_difference':
+                    if len(my_profession_set.symmetric_difference(names)) == 0:
+                        if step == 'Title':
+                            end_data.append({**my_prof_dict, 'title':onet_prof_dict['title'], 'lvl':step, 'codes':[code], 'nltk':nltk, 'type':type_})
+                            i += 1
+                            break
+                        result_codes.append(code)
+                        result_titles.append(onet_prof_dict['title'])
+                elif type_ == 'diff':
+                    if len(my_profession_set - names) == 0:
+                        if step == 'Title':
+                            end_data.append({**my_prof_dict, 'title':onet_prof_dict['title'], 'lvl':step, 'codes':[code], 'nltk':nltk, 'type':type_})
+                            i += 1
+                            break
+                        result_codes.append(code)
+                        result_titles.append(onet_prof_dict['title'])
 
             if i > 0:
                 break
@@ -44,15 +56,15 @@ def _match(code_title, end_data, i, my_prof_dict, my_profession_set, onet_prof, 
         if len(result_codes)>0 and i == 0:
             result_codes = list(np.unique(np.array(result_codes)))
             if len(result_codes)==1:
-                end_data.append({**my_prof_dict, 'title':code_title[result_codes[0]], 'lvl':step, 'codes':result_codes, 'nltk':nltk})
+                end_data.append({**my_prof_dict, 'title':code_title[result_codes[0]], 'lvl':step, 'codes':result_codes, 'nltk':nltk, 'type':type_})
                 i+=1
             elif len(result_codes)>1:
                 if nltk2:
-                    if nltk:
-                        end_data.append({**my_prof_dict, 'title':'undefined', 'lvl':step, 'codes':result_codes, 'nltk':nltk})
+                    if nltk and type_ == 'diff':
+                        end_data.append({**my_prof_dict, 'title':'undefined', 'lvl':step, 'codes':result_codes, 'nltk':nltk, 'type':type_})
                         break
                 else:
-                    end_data.append({**my_prof_dict, 'title':'undefined', 'lvl':step, 'codes':result_codes, 'nltk':nltk})
+                    end_data.append({**my_prof_dict, 'title':'undefined', 'lvl':step, 'codes':result_codes, 'nltk':nltk, 'type':type_})
                     break
 
         if i > 0:
@@ -68,20 +80,18 @@ def match(my_prof, onet_prof, steps=s.STEPS, nltk=True):
     from collections import defaultdict
 
     code_title = onet_prof[['code', 'title']].drop_duplicates().dropna()
-    # code_title = code_title.set_index('code')
     code_title = pd.Series(code_title['title'].tolist(), index=code_title['code'])
-    print (code_title)
     code_title = code_title.to_dict()
-
-    print (code_title['11-1011.00'])
 
     for my_prof_dict in my_prof.to_dict('record'):
         my_profession_set = my_prof_dict['my_professions_set']
 
-        i, end_data = _match(code_title, end_data, 0, my_prof_dict, my_profession_set, onet_prof, steps, False, nltk)
-
-        if i == 0 and nltk:
-            i, end_data = _match(code_title, end_data, i, my_prof_dict, my_profession_set, onet_prof, steps, True, nltk)
+        i = 0
+        for type_ in ['symmetric_difference', 'diff']:
+            if i == 0:
+                i, end_data = _match(code_title, end_data, i, my_prof_dict, my_profession_set, onet_prof, steps, False, nltk, type_)
+            if i == 0 and nltk:
+                i, end_data = _match(code_title, end_data, i, my_prof_dict, my_profession_set, onet_prof, steps, True, nltk, type_)
             
     return pd.DataFrame(end_data)
 

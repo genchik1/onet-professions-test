@@ -60,7 +60,7 @@ OUTPUT_FILE = {
     'parameters': {
         # 'sep': '\t',
         'index': None,
-        'columns': ['my_professions', 'title', 'lvl', 'accuracy', 'family', 'codes', 'nltk']
+        'columns': ['my_professions', 'title', 'lvl', 'accuracy', 'family', 'codes', 'nltk', 'type']
     }
 }
 
