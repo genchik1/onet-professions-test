@@ -21,6 +21,10 @@ my_prof = dp.open_my_file(s.MY_PROFESSIONS_FILE)
 my_prof['my_professions'] = dp.prepare(my_prof['my_professions'])
 my_prof['my_professions_set'] = dp.enrichment(my_prof['my_professions'])
 
+if s.USE_NLTK:
+    my_prof['my_professions_set nltk'] = my_prof['my_professions_set'].apply(dp.lemmatize_and_drop_stopwords)
+
+
 for (data, parameters) in onet_prof:
     for col in parameters['to_find_matches']:
         # if col == 'Alternate Title':
@@ -38,7 +42,7 @@ del onet_prof
 
 
 # Calculate:
-data = c.match(my_prof, onet_prof_all, steps=s.STEPS, nltk=s.USE_NLTK)
+data = c.match(my_prof, onet_prof_all, steps=s.STEPS)
 
 data['accuracy'] = c.accuracy(data['codes'])
 
