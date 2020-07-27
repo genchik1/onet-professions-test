@@ -41,7 +41,7 @@ del onet_prof
 
 
 # Calculate:
-data = c.match(my_prof, onet_prof_all, steps=s.STEPS)
+data = c.match(my_prof, onet_prof_all)
 
 data['accuracy'] = c.accuracy(data['codes'])
 
@@ -70,6 +70,3 @@ with pd.ExcelWriter(s.OUTPUT_FILE['path'], engine='xlsxwriter') as writer:
 
 
 print (data.groupby(['lvl']).size())
-
-
-

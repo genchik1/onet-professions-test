@@ -77,4 +77,3 @@ OUTPUT_FILE = {
 
 if not os.path.isdir(OUTPUT_DATA_PATHS):
     os.makedirs(OUTPUT_DATA_PATHS)
-
