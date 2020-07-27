@@ -6,6 +6,13 @@ import pandas as pd
 from pattern.text.en import singularize
 import settings as s
 
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer, WordNetLemmatizer
+from nltk.corpus import wordnet
+
+stop_words = set(stopwords.words("english"))
+lemmatizer = WordNetLemmatizer()
+
 
 def open_my_file(settings):
     data = pd.read_csv(settings['path'], **settings['read_parameters'])
@@ -76,23 +83,34 @@ def enrichment(x, words=s.REPLACE_WORDS):
     return x
 
 
+def lemmatize_and_drop_stopwords(x_list):
+    x_list = [word for word in x_list if not word in stop_words]
+    x_list = set(lemmatizer.lemmatize(x, pos=wordnet.VERB) for x in x_list)
+    return x_list
+
+
+def _lemmatize_and_drop_stopwords(x_lists):
+    result = []
+    for x_list in x_lists:
+        x_list = lemmatize_and_drop_stopwords(x_list)
+        result.append(x_list)
+    return result
+
+
 def enrichments(data, fs, nlt=True, replace_words=s.REPLACE_WORDS):
     data['title'] = data['Title']
     dataset = pd.DataFrame(data[['title', 'code']].drop_duplicates().dropna())
+
     for col in fs['to_find_matches']:
         df = data[['title', 'code', col]].drop_duplicates().dropna()
         df[col] = enrichment(prepare(df[col]), replace_words)
         df = df.groupby(['title', 'code'])[col].apply(list).reset_index()
+        if s.USE_NLTK:
+            df[col+' nltk'] = df[col].apply(_lemmatize_and_drop_stopwords)
         dataset = dataset.merge(df, on=['title', 'code'], how='outer')
         del df
     del data
     return dataset
-
-
-
-
-
-
 
 
 
