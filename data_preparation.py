@@ -106,8 +106,7 @@ def enrichments(data, fs, nlt=True, replace_words=s.REPLACE_WORDS):
         df = data[['title', 'code', col]].drop_duplicates().dropna()
         df[col] = enrichment(prepare(df[col]), replace_words)
         df = df.groupby(['title', 'code'])[col].apply(list).reset_index()
-        if s.USE_NLTK:
-            df[col+' nltk'] = df[col].apply(_lemmatize_and_drop_stopwords)
+        df[col] = df[col].apply(_lemmatize_and_drop_stopwords)
         dataset = dataset.merge(df, on=['title', 'code'], how='outer')
         del df
     del data

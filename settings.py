@@ -34,13 +34,6 @@ STEPS = ['Title', 'Short Title', 'Alternate Title']
 COMPARISON_OF_WORDS = ['symmetric_difference', 'difference']   # 'symmetric_diff'
 
 
-USE_NLTK = True
-
-
-if USE_NLTK:
-    STEPS = ['Title', 'Alternate Title', 'Short Title', 'Title nltk', 'Alternate Title nltk', 'Short Title nltk']
-
-
 REPLACE_WORDS = {
     'sr':'senior',
     'i': '',
@@ -70,7 +63,7 @@ OUTPUT_FILE = {
     'parameters': {
         # 'sep': '\t',
         'index': None,
-        'columns': ['my_professions', 'title', 'lvl', 'accuracy', 'coefficient', 'family', 'codes', 'nltk']
+        'columns': ['my_professions', 'title', 'lvl', 'accuracy', 'coefficient', 'family', 'codes']
     }
 }
 

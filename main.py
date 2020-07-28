@@ -21,8 +21,7 @@ my_prof = dp.open_my_file(s.MY_PROFESSIONS_FILE)
 my_prof['my_professions'] = dp.prepare(my_prof['my_professions'])
 my_prof['my_professions_set'] = dp.enrichment(my_prof['my_professions'])
 
-if s.USE_NLTK:
-    my_prof['my_professions_set nltk'] = my_prof['my_professions_set'].apply(dp.lemmatize_and_drop_stopwords)
+my_prof['my_professions_set'] = my_prof['my_professions_set'].apply(dp.lemmatize_and_drop_stopwords)
 
 
 for (data, parameters) in onet_prof:
